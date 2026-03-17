@@ -70,6 +70,6 @@ const BAZA_SLOWEK = [
 	{ lac: "deinde", pl: "dalej" }, { lac: "plausit", pl: "zaklaskał" }, { lac: "gēns", pl: "ród" }, { lac: "tantum", pl: "tylko" }, { lac: "periculosus", pl: "niebezpieczny" }, 
 	{ lac: "rīsit", pl: "zaśmiał się" }, { lac: "cōnsūmpsit", pl: "spożył" }, { lac: "quō?", pl: "dokąd?" }, { lac: "favere", pl: "wspierać" }, { lac: "fautor", pl: "zwolennik" }, 
 	{ lac: "conspexit", pl: "zauważył" }, { lac: "videt", pl: "widzi" }, { lac: "vidit", pl: "zobaczył" }, { lac: "caupō", pl: "karczmarz" }, { lac: "civis", pl: "obywatel" },
-	{ lac: "venit", pl: "przychodzi" }, { lac: "vēnit", pl: "przyszedł" }, 
+	{ lac: "venit", pl: "przychodzi" }, { lac: "vēnit", pl: "przyszedł" }, { lac: "utilis", pl: "pożyteczny" }, 
 	{ lac: "bibit", pl: "pije" }, { lac: "bībit", pl: "wypił" },
 ];
