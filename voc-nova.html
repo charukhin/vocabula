@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen Latinum: Intellegentia Artificialis</title>
+    <script src="voc-files/baza.js"></script>
+    
+    <style>
+        :root {
+            --primary: #5e2a84;
+            --gold: #d4af37;
+            --bg: #f4f1ea;
+            --text: #2c3e50;
+            --success: #27ae60;
+            --error: #c0392b;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: var(--bg);
+            padding: 20px;
+            color: var(--text);
+            text-align: center;
+            overflow-x: hidden; 
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 4px;
+            border: 2px solid var(--primary);
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+            margin-top: 50px;
+            z-index: 10; 
+            margin-bottom: 100px; 
+        }
+
+        h1 {
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--gold);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            margin-top: 20px;
+        }
+
+        .timer-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            font-size: 1.4em;
+            font-weight: bold;
+            color: var(--primary);
+            background-color: white;
+            padding: 10px 20px;
+            border: 2px solid var(--primary);
+            border-radius: 50px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .timer-danger {
+            color: #fff;
+            border-color: var(--error);
+            background-color: var(--error);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .streak-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.9em;
+            color: var(--gold);
+            font-weight: bold;
+            background: #fff;
+            padding: 5px 10px;
+            border: 1px solid var(--gold);
+            border-radius: 15px;
+        }
+        
+        .difficulty-badge {
+            background-color: #e74c3c;
+            color: white;
+            font-size: 0.6em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+            vertical-align: middle;
+            display: none; 
+        }
+
+        .word-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #fafafa;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+            border-radius: 4px;
+        }
+
+        .question-text {
+            flex: 1;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .label-small {
+            font-size: 0.7em; 
+            color: #7f8c8d; 
+            display: block; 
+            font-weight: normal;
+            font-style: italic;
+            margin-bottom: 4px;
+        }
+
+        .input-area {
+            flex: 1.2;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="text"], select {
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #fdfefe;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            font-family: 'Times New Roman', serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .btn-check { background-color: var(--primary); color: white; display: inline-block; }
+        .btn-check:hover { background-color: #4a1f6a; }
+
+        .btn-repeat { background-color: var(--gold); color: #3e2723; display: none; margin-left: 10px; }
+        .btn-repeat:hover { background-color: #b7952b; }
+        
+        .btn-continue { background-color: var(--success); color: white; display: none; margin-left: 10px; }
+        .btn-continue:hover { background-color: #1e8449; }
+
+        #result-area {
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 2px solid var(--gold);
+            display: none;
+        }
+
+        .score-percent { font-size: 2.5em; font-weight: bold; display: block; margin-bottom: 10px; }
+        .latin-message { font-size: 1.8em; font-style: italic; margin-bottom: 10px; color: var(--primary); }
+        .feedback-icon { font-weight: bold; margin-left: 5px; white-space: nowrap; }
+        .ok { color: var(--success); }
+        .bad { color: var(--error); }
+        
+        .info-text { font-size: 0.9em; color: #666; margin-bottom: 20px; }
+        
+        .victory-box {
+            display: none;
+            padding: 40px;
+            background-color: #eafaf1;
+            border: 3px solid var(--success);
+            color: var(--success);
+            font-size: 1.5em;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        .special-reward-box {
+            display: none;
+            margin-top: 20px;
+            padding: 30px;
+            background-color: #fff9c4;
+            border: 4px double var(--gold);
+            color: #3e2723;
+            border-radius: 8px;
+            animation: fadeIn 1s ease;
+        }
+        
+        .laude-title {
+            font-size: 2em;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .aphorism-latin, .aphorism-pl { display: block; margin-bottom: 10px; }
+        .aphorism-latin { font-size: 1.8em; font-style: italic; font-weight: bold; }
+        .aphorism-pl { font-size: 1em; color: #555; margin-bottom: 20px; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- ANIMACJE (Deszcz/Fajerwerki) --- */
+        .anim-element {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 2em;
+            animation-timing-function: linear;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes pop {
+            0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(1.5) rotate(720deg); opacity: 0; }
+        }
+
+        /* --- POSTACIE (Bogini, Legionista, Cesarz) --- */
+        
+        .character-container {
+            display: none;
+            margin-top: 20px;
+            text-align: center; 
+        }
+
+        /* Specjalny styl TYLKO dla Bogiń - FLEX (obok siebie) */
+        #goddess-reward {
+            display: none; 
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+        }
+
+        /* Bogini - skacze */
+        .goddess-img {
+            max-height: 250px;
+            width: auto;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
+            animation: joyfulBounce 0.6s infinite alternate ease-in-out;
+        }
+
+        /* Przeciwfaza dla drugiej bogini */
+        #img-bogini2 {
+            animation-delay: -0.3s;
+        }
+
+        /* Legionista - STOI NIERUCHOMO */
+        .legionary-img {
+            max-height: 250px;
+            width: auto;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
+        }
+
+        @keyframes joyfulBounce {
+            0%   { transform: translateY(0) rotate(0deg) scale(1); }
+            100% { transform: translateY(-15px) rotate(2deg) scale(1.05); }
+        }
+
+        /* 2. CESARZ (Przejazd) */
+        .emperor-wrapper {
+            position: fixed;
+            bottom: 10px;
+            left: 100%;
+            z-index: 5000;
+            width: 300px;
+            pointer-events: none;
+            display: none;
+        }
+
+        .emperor-img-inner {
+            width: 100%;
+            height: auto;
+            animation: emperorBump 0.3s infinite alternate ease-in-out;
+        }
+
+        .drive-animation {
+            display: block !important;
+            animation: driveAcross 6s linear forwards;
+        }
+
+        @keyframes driveAcross {
+            0% { left: 110%; }
+            100% { left: -50%; }
+        }
+
+        @keyframes emperorBump {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="timer-display" class="timer-display">02:00</div>
+
+<div id="emperor-wrapper" class="emperor-wrapper">
+    <img src="voc-files/cesarz.png" alt="Ave Caesar!" class="emperor-img-inner">
+</div>
+
+<div class="container">
+    <div class="streak-indicator" id="streak-ui">Perfectum: 0/3</div>
+    
+    <h1>Examen Progressīvum</h1>
+    
+    <div id="victory-screen" class="victory-box">
+        VICTORIA!<br>
+        Omnia verba didicistī!<br>
+        (Nauczyłeś się wszystkich słów!)
+        <br><br>
+        <button class="btn btn-check" onclick="location.reload()">Ab initiō (Od nowa)</button>
+    </div>
+
+    <div id="game-interface">
+        <p class="info-text">
+            <strong>System:</strong> Aplikacja pamięta Twoje błędy. Słowa trudne będą pojawiać się częściej.<br>
+            <strong>Zasada:</strong> Słowo znika z puli tylko po poprawnej odpowiedzi.<br>
+            3 razy bezbłędnie = Przejazd Cesarza i nagroda.
+        </p>
+        
+        <div id="test-container"></div>
+
+        <button id="checkBtn" class="btn btn-check" onclick="probare()">Responsa probā</button>
+        <button id="repeatBtn" class="btn btn-repeat" onclick="obslugaPowtorki()">Iterā (popraw błędy)</button>
+        <button id="continueBtn" class="btn btn-continue" onclick="nastepnaRunda()">Continuā (Dalej)</button>
+    </div>
+
+    <div id="result-area">
+        <span class="latin-message" id="latin-msg"></span>
+        <span class="score-percent" id="score-display"></span>
+
+        <div id="goddess-reward" class="character-container">
+            <img src="voc-files/bogini.png" alt="Victoria!" class="goddess-img" id="img-bogini1">
+            <img src="voc-files/bogini2.png" alt="Victoria II!" class="goddess-img" id="img-bogini2" style="display: none;">
+        </div>
+
+        <div id="legionary-punish" class="character-container">
+            <img src="voc-files/legioner.png" alt="Legionista patrzy surowo" class="legionary-img" id="img-legioner1">
+            <img src="voc-files/legioner2.png" alt="Legionista jest wściekły" class="legionary-img" id="img-legioner2" style="display: none;">
+        </div>
+    </div>
+
+    <div id="special-reward" class="special-reward-box">
+        <span class="laude-title">SUMMA CUM LAUDE!</span>
+        <span class="aphorism-latin" id="aforyzm-lat"></span>
+        <span class="aphorism-pl" id="aforyzm-pl"></span>
+        <button class="btn btn-continue" style="display: inline-block;" onclick="zresetujLicznikIKontynuuj()">Continuā (Dalej)</button>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // AUDIO - UNLOCK
+    // ============================================================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let isAudioUnlocked = false;
+    let flowerInterval = null;
+    let musicInterval = null;
+    let musicTempo = 600; // Startowe tempo w ms
+
+    function unlockAudio() {
+        if (!isAudioUnlocked && audioCtx.state !== 'running') {
+            audioCtx.resume().then(() => { isAudioUnlocked = true; });
+        }
+    }
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
+
+    // ============================================================
+    // AUDIO - SYNTEZA DUETU: LIRA I SYRINGA
+    // ============================================================
+    function playAnticStep() {
+        if (!musicInterval) return;
+        const now = audioCtx.currentTime;
+        
+        // 1. LIRA (Szarpana struna - oscylator trójkątny)
+        // Skala pentatoniczna molowa (mniej więcej) dla antycznego klimatu
+        const lyreFreqs = [220, 261.63, 293.66, 329.63, 392.00, 440]; // A3, C4, D4, E4, G4, A4
+        const lyreFreq = lyreFreqs[Math.floor(Math.random() * lyreFreqs.length)];
+        
+        const lyreOsc = audioCtx.createOscillator();
+        const lyreGain = audioCtx.createGain();
+        lyreOsc.type = 'triangle'; // Trójkąt dla liry
+        lyreOsc.frequency.setValueAtTime(lyreFreq, now);
+        
+        // Obwiednia głośności - szybki atak, dość szybki zanik (plucked string)
+        lyreGain.gain.setValueAtTime(0, now);
+        lyreGain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+        lyreGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        
+        lyreOsc.connect(lyreGain); lyreGain.connect(audioCtx.destination);
+        lyreOsc.start(now); lyreOsc.stop(now + 0.5);
+
+        // 2. SYRINGA (Fletnia Pana - czysty sinus z vibrato i "oddechem")
+        // Gra rzadziej niż lira, w wyższym rejestrze
+        if (Math.random() > 0.4) { 
+            // Wybieramy harmonijny interwał (kwinta lub oktawa wyżej)
+            const panIntervals = [1.5, 2]; // Kwinta, Oktawa
+            const panFreq = lyreFreq * panIntervals[Math.floor(Math.random() * panIntervals.length)];
+            
+            const panOsc = audioCtx.createOscillator();
+            const panGain = audioCtx.createGain();
+            const vibrato = audioCtx.createOscillator();
+            const vibratoGain = audioCtx.createGain();
+
+            panOsc.type = 'sine'; // Sinus dla fletu
+            panOsc.frequency.setValueAtTime(panFreq, now);
+            
+            // Vibrato
+            vibrato.frequency.value = 5; // Częstotliwość vibrato (5Hz)
+            vibratoGain.gain.value = 3; // Głębokość vibrato (odchylenie w Hz)
+            vibrato.connect(vibratoGain);
+            vibratoGain.connect(panOsc.frequency);
+
+            // Obwiednia głośności - miękki atak (oddech), dłuższe wybrzmiewanie
+            panGain.gain.setValueAtTime(0, now);
+            panGain.gain.linearRampToValueAtTime(0.15, now + 0.1); // Miękki start
+            panGain.gain.exponentialRampToValueAtTime(0.01, now + 0.7); // Długi ogon
+            
+            panOsc.connect(panGain); panGain.connect(audioCtx.destination);
+            vibrato.start(now); panOsc.start(now);
+            panOsc.stop(now + 0.8); vibrato.stop(now + 0.8);
+        }
+
+        // PRZYSPIESZANIE (Logika Sirtaki - coraz szybciej)
+        musicTempo = Math.max(150, musicTempo * 0.98); // Przyspieszamy o 2% co krok, do limitu 150ms
+        musicInterval = setTimeout(playAnticStep, musicTempo);
+    }
+
+    function startMusic() {
+        if (musicInterval) return;
+        musicTempo = 600; // Reset tempa
+        musicInterval = setTimeout(playAnticStep, musicTempo);
+    }
+
+    function stopMusic() {
+        clearTimeout(musicInterval);
+        musicInterval = null;
+        // Należy też wyciszyć ew. trwające dźwięki, ale w prostym modelu wystarczy zatrzymać pętlę
+    }
+
+    // ============================================================
+    // ANIMACJE I EFEKTY WIZUALNE
+    // ============================================================
+    
+    // CIĄGŁY DESZCZ KWIATÓW (Dla dwóch bogiń)
+    function startContinuousFlowers() {
+        if (flowerInterval) return;
+        
+        // Bogatsza, bardziej różnorodna lista dla trybu "boskiego"
+        const superKwiatki = ['💐', '🌸', '💮', '🏵️', '🌹', '🥀', '🌺', '🌻', '🌼', '🌷', '🌱', '🌿', '🍀', '✨'];
+        
+        // Gęstszy deszcz: co 80ms (zamiast standardowych 200ms)
+        flowerInterval = setInterval(() => {
+            // Dodajemy parametr 'true' dla trybu intensywnego (jaskrawego)
+            spawnElement(superKwiatki, 'fall', true);
+        }, 80);
+    }
+
+    function stopContinuousFlowers() {
+        clearInterval(flowerInterval);
+        flowerInterval = null;
+    }
+
+    // POJEDYNCZY DESZCZ (Dla jednej bogini)
+    function deszczKwiatow() {
+        playSweetSound(); 
+        // Standardowa, prostsza lista
+        const kwiatki = ['🌸', '🌺', '🌼', '🌷', '🌹', '🌻', '💐'];
+        for (let i = 0; i < 30; i++) {
+            // Tryb standardowy (bez 'true')
+            spawnElement(kwiatki, 'fall');
+        }
+    }
+
+    // Generator elementów (kwiaty, fajerwerki)
+    function spawnElement(ikony, animName, isIntense = false) {
+        const el = document.createElement('div');
+        el.classList.add('anim-element');
+        el.innerText = ikony[Math.floor(Math.random() * ikony.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.top = '-10vh';
+        el.style.animation = `${animName} ${Math.random() * 2 + 2}s linear forwards`; 
+        
+        if (isIntense) {
+            // Tryb intensywny: jaskrawy, złocisty blask i nieco większe rozmiary
+            el.style.filter = "drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #ffdb4d) brightness(1.3)";
+            el.style.fontSize = (Math.random() * 1.8 + 1.2) + 'em';
+        } else {
+            // Tryb standardowy
+            el.style.fontSize = (Math.random() * 1.5 + 1) + 'em';
+        }
+        
+        document.body.appendChild(el);
+        setTimeout(() => { el.remove(); }, 4000);
+    }
+
+    // Inne dźwięki i animacje
+    function playFanfareSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; 
+        const times = [0, 0.15, 0.30, 0.60];
+        const lengths = [0.1, 0.1, 0.2, 0.8];
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle'; osc.frequency.value = freq;
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now + times[i]);
+            gain.gain.setValueAtTime(0.5, now + times[i]);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + times[i] + lengths[i]);
+            osc.stop(now + times[i] + lengths[i] + 0.1);
+        });
+    }
+
+    function playSweetSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; 
+        notes.forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine'; osc.frequency.value = freq;
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const startTime = now + (i * 0.08);
+            osc.start(startTime);
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 2.0);
+            osc.stop(startTime + 2.0);
+        });
+    }
+
+    function wystrzalSalutow() {
+        playFanfareSound();
+        const ikony = ['🎉', '✨', '🎆', '🎇', '🌟', '🏆', '💫'];
+        let duration = 3000;
+        let burstInterval = setInterval(() => {
+            for(let j=0; j<6; j++) spawnExplosion(ikony);
+        }, 100); 
+        setTimeout(() => { clearInterval(burstInterval); }, duration);
+    }
+
+    function uruchomCesarza() {
+        const emperor = document.getElementById('emperor-wrapper');
+        emperor.classList.remove('drive-animation');
+        void emperor.offsetWidth; 
+        emperor.classList.add('drive-animation');
+        setTimeout(() => {
+            emperor.classList.remove('drive-animation');
+        }, 6000);
+    }
+
+    function spawnExplosion(ikony) {
+        const el = document.createElement('div');
+        el.classList.add('anim-element');
+        el.innerText = ikony[Math.floor(Math.random() * ikony.length)];
+        const startX = Math.random() * 80 + 10; 
+        const startY = Math.random() * 60 + 20; 
+        el.style.left = startX + 'vw'; el.style.top = startY + 'vh';
+        const angle = Math.random() * 2 * Math.PI;
+        const velocity = Math.random() * 30 + 10; 
+        const dx = Math.cos(angle) * velocity + 'vw';
+        const dy = Math.sin(angle) * velocity + 'vh';
+        el.style.setProperty('--dx', dx); el.style.setProperty('--dy', dy);
+        el.style.animation = `pop ${Math.random() * 1 + 0.5}s ease-out forwards`;
+        document.body.appendChild(el);
+        setTimeout(() => { el.remove(); }, 1500);
+    }
+
+    // ============================================================
+// BAZA DANYCH I STATYSTYKI
+// ============================================================
+
+const sententiae = [
+    { lat: "Labor omnia vincit", pl: "Praca wszystko zwycięża" },
+    { lat: "Nulla dies sine linea", pl: "Ani dnia bez kreski" },
+    { lat: "Fortes fortuna adiuvat", pl: "Śmiałym los sprzyja" },
+    { lat: "Vivere est militare", pl: "Życie jest walką" },
+    { lat: "Veni, vidi, vici", pl: "Przybyłem, zobaczyłem, zwyciężyłem" },
+    { lat: "Verba volant, scripta manent", pl: "Słowa ulatują, pismo zostaje" },
+    { lat: "Sapere aude", pl: "Odważ się być mądrym" },
+    { lat: "Per aspera ad astra", pl: "Przez trudy do gwiazd" },
+    { lat: "Amor vincit omnia", pl: "Miłość zwycięża wszystko" },
+    { lat: "Carpe diem", pl: "Chwytaj dzień" },
+    { lat: "Tempus fugit", pl: "Czas ucieka" },
+    { lat: "Festina lente", pl: "Śpiesz się powoli" },
+    { lat: "Sol lucet omnibus", pl: "Słońce świeci dla wszystkich" },
+    { lat: "Dies diem docet", pl: "Dzień uczy dzień" },
+    { lat: "Scientia potentia est.", pl: "Wiedza to potęga." },
+    { lat: "Repetitio est mater studiorum.", pl: "Powtarzanie jest matką nauki." },
+    { lat: "Docendo discimus.", pl: "Ucząc innych, uczymy się sami." },
+    { lat: "Usus magister est optimus.", pl: "Praktyka jest najlepszym nauczycielem." },
+    { lat: "Errare humanum est.", pl: "Błądzić jest rzeczą ludzką." },
+    { lat: "Nosce te ipsum.", pl: "Poznaj samego siebie." },
+    { lat: "Gutta cavat lapidem non vi, sed saepe cadendo.", pl: "Kropla drąży skałę nie siłą, lecz częstym spadaniem." },
+    { lat: "Historia vitae magistra est.", pl: "Historia jest nauczycielką życia." },
+    { lat: "Ignorantia iuris nocet.", pl: "Nieznajomość prawa szkodzi." },
+    { lat: "Litterae non erubescunt.", pl: "Papier się nie rumieni." },
+    { lat: "Mens sana in corpore sano.", pl: "W zdrowym ciele zdrowy duch." },
+    { lat: "Non scholae, sed vitae discimus.", pl: "Nie uczymy się dla szkoły, lecz dla życia." },
+    { lat: "Plenus venter non studet libenter.", pl: "Pełny brzuch nie uczy się chętnie." },
+    { lat: "Radices litterarum amarae sunt, fructus dulces.", pl: "Korzenie nauki są gorzkie, ale owoce słodkie." },
+    { lat: "Audentes fortuna iuvat.", pl: "Śmiałym los sprzyja." },
+    { lat: "Contra spem spero.", pl: "Wbrew nadziei mam nadzieję." },
+    { lat: "Dum spiro, spero.", pl: "Dopóki oddycham, mam nadzieję." },
+    { lat: "In arduis virtus.", pl: "W trudnościach rodzi się cnota." },
+    { lat: "Perfer et obdura.", pl: "Znoś i wytrwaj." },
+    { lat: "Qui audet adipiscitur.", pl: "Kto się ośmiela, ten zdobywa." },
+    { lat: "Vires acquirit eundo.", pl: "Rośnie w siłę w miarę postępu." },
+    { lat: "Volens nolens.", pl: "Chcąc nie chcąc." },
+    { lat: "Nil desperandum.", pl: "Nie należy rozpaczać." },
+    { lat: "Aut viam inveniam, aut faciam.", pl: "Albo znajdę drogę, albo ją wytyczę." },
+    { lat: "Constantia et virtute.", pl: "Wytrwałością i męstwem." },
+    { lat: "Fide, sed cui, vide.", pl: "Ufaj, ale bacz, komu." },
+    { lat: "Vincit qui se vincit.", pl: "Zwycięża ten, kto pokonuje samego siebie." },
+    { lat: "Acta non verba.", pl: "Czyny, nie słowa." },
+    { lat: "Ars longa, vita brevis.", pl: "Sztuka długa, życie krótkie." },
+    { lat: "Potius sero quam numquam.", pl: "Lepiej późno niż wcale." },
+    { lat: "Memento mori.", pl: "Pamiętaj o śmierci." },
+    { lat: "Omnia mutantur, nihil interit.", pl: "Wszystko się zmienia, nic nie ginie." },
+    { lat: "Tempus edax rerum.", pl: "Czas niszczy wszystko." },
+    { lat: "Ut sementem feceris, ita metes.", pl: "Jak posiejesz, tak zbierzesz." },
+    { lat: "Vive memor leti.", pl: "Żyj pamiętając o śmierci." },
+    { lat: "Hodie mihi, cras tibi.", pl: "Dziś mnie, jutro tobie." },
+    { lat: "Fugit irreparabile tempus.", pl: "Czas ucieka bezpowrotnie." },
+    { lat: "Citius, altius, fortius.", pl: "Szybciej, wyżej, mocniej." },
+    { lat: "Alteri vivas oportet, si vis tibi vivere.", pl: "Trzeba żyć dla innych, jeśli chcesz żyć dla siebie." },
+    { lat: "Carpe noctem.", pl: "Chwytaj noc." },
+    { lat: "Omnia mea mecum porto.", pl: "Wszystko co moje noszę ze sobą." },
+    { lat: "Finis coronat opus.", pl: "Koniec wieńczy dzieło." },
+    { lat: "Amicus Plato, sed magis amica veritas.", pl: "Platon przyjacielem, lecz większą przyjaciółką prawda." },
+    { lat: "Dura lex, sed lex.", pl: "Twarde prawo, ale prawo." },
+    { lat: "Fiat iustitia, et pereat mundus.", pl: "Niech się stanie sprawiedliwość, choćby miał zginąć świat." },
+    { lat: "Homo homini lupus est.", pl: "Człowiek człowiekowi wilkiem." },
+    { lat: "In vino veritas.", pl: "W winie prawda." },
+    { lat: "Pecunia non olet.", pl: "Pieniądz nie śmierdzi." },
+    { lat: "Primum non nocere.", pl: "Po pierwsze nie szkodzić." },
+    { lat: "Si vis pacem, para bellum.", pl: "Jeśli chcesz pokoju, przygotuj się do wojny." },
+    { lat: "Suum cuique.", pl: "Każdemu to, co mu się należy." },
+    { lat: "Vox populi, vox Dei.", pl: "Głos ludu to głos Boga." },
+    { lat: "Honesta res est laeta paupertas.", pl: "Cenną rzeczą jest radosne ubóstwo." },
+    { lat: "Nemo iudex in causa sua.", pl: "Nikt nie może być sędzią we własnej sprawie." },
+    { lat: "Pacta sunt servanda.", pl: "Umów należy dotrzymywać." },
+    { lat: "Veritatis simplex oratio est.", pl: "Mowa prawdy jest prosta." }
+];
+
+function getLosowyAforyzm() {
+    let historia = JSON.parse(localStorage.getItem('aforyzmyHistoria')) || [];
+    let dostepne = sententiae.filter(s => !historia.includes(s.lat));
+    
+    if (dostepne.length === 0) {
+        dostepne = [...sententiae];
+        historia = [];
+    }
+    
+    const wylosowana = dostepne[Math.floor(Math.random() * dostepne.length)];
+    
+    historia.push(wylosowana.lat);
+    localStorage.setItem('aforyzmyHistoria', JSON.stringify(historia));
+    
+    return wylosowana;
+}
+
+    // --- SYSTEM STATYSTYK (LOCAL STORAGE) ---
+    function loadStats() {
+        const saved = localStorage.getItem('latinStats');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    function saveStats(stats) {
+        localStorage.setItem('latinStats', JSON.stringify(stats));
+    }
+
+    // --- SYSTEM PAMIĘCI WYŚWIETLEŃ ---
+    function loadHistory() {
+        const saved = localStorage.getItem('latinHistory');
+        return saved ? JSON.parse(saved) : {};
+    }
+
+    function saveHistory(history) {
+        localStorage.setItem('latinHistory', JSON.stringify(history));
+    }
+
+    function updateHistoryStat(latinWord) {
+        const history = loadHistory();
+        history[latinWord] = (history[latinWord] || 0) + 1;
+        saveHistory(history);
+    }
+
+    function updateWordStat(latinWord, isError) {
+        const stats = loadStats();
+        if (!stats[latinWord]) stats[latinWord] = 0;
+        
+        if (isError) {
+            stats[latinWord]++; // Błąd: kara
+        } else {
+            // Sukces: nagroda (zmniejszamy karę)
+            if (stats[latinWord] > 0) {
+                stats[latinWord]--;
+            }
+        }
+        saveStats(stats);
+    }
+    
+    // Zmienne stanu gry
+    let bledneSlowka = [];
+    let opanowaneSlowka = [];
+    let streakPerfect = 0; 
+    let streakError = 0; 
+    let timerInterval;
+    const TIME_LIMIT = 120; 
+
+    // Helpery
+    function usunKreski(t) { if (!t) return ""; return t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+    function losujElementy(t, i) { let k = [...t]; for (let x = k.length-1; x>0; x--) { const j = Math.floor(Math.random()*(x+1)); [k[x], k[j]] = [k[j], k[x]]; } return k.slice(0, i); }
+    function shuffleArray(a) { for (let i = a.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i], a[j]] = [a[j], a[i]]; } }
+    function pobierzOpcje(p) { const i = BAZA_SLOWEK.filter(s => s.pl !== p); const w = losujElementy(i, 3).map(s => s.pl); const o = [p, ...w]; shuffleArray(o); return o; }
+    function aktualizujLicznik() { document.getElementById('streak-ui').textContent = `Perfectum: ${streakPerfect}/3`; }
+
+    // ============================================================
+    // LOGIKA TIMERA I GRY
+    // ============================================================
+    function startTimer() {
+        clearInterval(timerInterval);
+        let timeLeft = TIME_LIMIT;
+        updateTimerDisplay(timeLeft);
+        const display = document.getElementById('timer-display');
+        display.classList.remove('timer-danger'); 
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay(timeLeft);
+            if (timeLeft <= 10) display.classList.add('timer-danger');
+            if (timeLeft <= 0) { clearInterval(timerInterval); probare(); }
+        }, 1000);
+    }
+    function stopTimer() { clearInterval(timerInterval); }
+    function updateTimerDisplay(s) {
+        const m = Math.floor(s / 60); const sc = s % 60;
+        document.getElementById('timer-display').textContent = `${m < 10 ? "0"+m : m}:${sc < 10 ? "0"+sc : sc}`;
+    }
+
+    function generareExamen(wymuszone = []) {
+        startTimer();
+        const container = document.getElementById('test-container');
+        container.innerHTML = ""; 
+        
+        let pula = [...wymuszone];
+        let brakujaceMiejsca = 10 - pula.length;
+
+        // Filtrujemy dostępne słówka (te, których jeszcze nie opanowaliśmy i nie są wymuszone)
+        let dostepne = BAZA_SLOWEK.filter(s => 
+            !pula.includes(s) && !opanowaneSlowka.includes(s)
+        );
+
+        if (dostepne.length === 0 && pula.length === 0) {
+            // KONIEC GRY - brak słówek
+            stopTimer(); 
+            document.getElementById('game-interface').style.display = 'none';
+            document.getElementById('result-area').style.display = 'none';
+            document.getElementById('special-reward').style.display = 'none';
+            document.getElementById('victory-screen').style.display = 'block';
+            document.getElementById('timer-display').style.display = 'none'; 
+            return;
+        }
+
+        if (brakujaceMiejsca > 0) {
+            const stats = loadStats();
+            const history = loadHistory(); // Pobieramy historię wyświetleń
+            
+            // Przygotowujemy listę słówek z wagami błędów i licznikiem wyświetleń
+            let dostepneZWagami = dostepne.map(s => ({ 
+                ...s, 
+                errors: stats[s.lac] || 0,
+                seen: history[s.lac] || 0
+            }));
+
+            // Najpierw mieszamy wszystko, żeby słowa o identycznych statystykach szły losowo
+            shuffleArray(dostepneZWagami);
+
+            // GŁÓWNE SORTOWANIE:
+            // 1. Najpierw błędy (malejąco) - "trudne idą pierwsze"
+            // 2. Jeśli błędy są równe, bierzemy te, które były rzadziej widziane (rosnąco)
+            dostepneZWagami.sort((a, b) => {
+                if (b.errors !== a.errors) return b.errors - a.errors;
+                return a.seen - b.seen;
+            });
+
+            let trudne = dostepneZWagami.filter(w => w.errors > 0).slice(0, 5);
+            let resztaPuli = dostepneZWagami.filter(w => !trudne.includes(w));
+            let losowe = resztaPuli.slice(0, brakujaceMiejsca - trudne.length);
+            
+            pula = [...pula, ...trudne, ...losowe];
+            
+            // Zapisujemy w historii, że te słowa zostały właśnie wybrane do sesji
+            pula.forEach(s => updateHistoryStat(s.lac));
+        }
+
+        shuffleArray(pula);
+        const stats = loadStats();
+
+        pula.forEach((s) => {
+            const kier = Math.random() < 0.5 ? 'pl_to_lac' : 'lac_to_pl';
+            const err = wymuszone.includes(s);
+            
+            const errorCount = stats[s.lac] || 0;
+            const badgeHtml = errorCount > 0 
+                ? `<span class="difficulty-badge" style="display:inline-block">Błędy: ${errorCount}</span>` 
+                : '';
+
+            let inp = '', lbl = '', mode = '';
+            if (kier === 'pl_to_lac') {
+                lbl = "Verte in Latinum (Na łacinę):"; mode = "latin_write"; 
+                inp = `<input type="text" data-type="text" data-correct="${s.lac}" data-mode="${mode}" placeholder="Wpisz słowo...">`;
+            } else {
+                lbl = "Verte in Polonicum (Na polski):";
+                if (err) {
+                    mode = "polish_write";
+                    inp = `<input type="text" data-type="text" data-correct="${s.pl}" data-mode="${mode}" placeholder="Wpisz tłumaczenie..." style="border-color: #d35400; background-color: #fdf2e9;">`;
+                } else {
+                    mode = "polish_select";
+                    let opt = `<option value="" disabled selected>-- Wybierz --</option>`;
+                    pobierzOpcje(s.pl).forEach(o => { opt += `<option value="${o}">${o}</option>`; });
+                    inp = `<select data-type="select" data-correct="${s.pl}" data-mode="${mode}">${opt}</select>`;
+                }
+            }
+            const d = document.createElement('div'); d.className = 'word-row';
+            d.innerHTML = `<div class="question-text"><span class="label-small">${lbl}</span>${kier === 'pl_to_lac' ? s.pl : s.lac} ${badgeHtml}</div><div class="input-area">${inp}<span class="feedback-icon"></span></div>`;
+            container.appendChild(d);
+        });
+    }
+
+    function probare() {
+        stopTimer(); 
+        const inputs = document.querySelectorAll('input[type="text"], select');
+        let pts = 0; let tot = inputs.length;
+        bledneSlowka = []; 
+        
+        inputs.forEach(i => {
+            const typ = i.getAttribute('data-type');
+            const corr = i.getAttribute('data-correct');
+            const mode = i.getAttribute('data-mode');
+            const icon = i.nextElementSibling;
+            let ok = false; let val = i.value.trim();
+            if (typ === 'text') { if (usunKreski(val) === usunKreski(corr) && usunKreski(val) !== "") ok = true; } 
+            else { if (val === corr) ok = true; }
+            
+            const fw = BAZA_SLOWEK.find(w => w.lac === corr || w.pl === corr);
+            
+            // --- AKTUALIZACJA STATYSTYK ---
+            if (fw) {
+                if (!ok) { updateWordStat(fw.lac, true); } 
+                else { updateWordStat(fw.lac, false); }
+            }
+
+            if (ok) {
+                pts++; i.style.border = "2px solid var(--success)"; i.style.backgroundColor = "#eafaf1"; icon.innerHTML = "✓"; icon.className = "feedback-icon ok";
+                if (mode === 'latin_write' && fw && !opanowaneSlowka.includes(fw)) opanowaneSlowka.push(fw);
+            } else {
+                i.style.border = "2px solid var(--error)"; i.style.backgroundColor = "#fadbd8"; icon.innerHTML = ` ${corr}`; icon.className = "feedback-icon bad";
+                if (fw && !bledneSlowka.includes(fw)) bledneSlowka.push(fw);
+            }
+        });
+        const proc = Math.round((pts / tot) * 100);
+        
+        // --- LOGIKA POSTACI I NAGRÓD ---
+        const godRew = document.getElementById('goddess-reward');
+        const legPun = document.getElementById('legionary-punish');
+        const b1 = document.getElementById('img-bogini1');
+        const b2 = document.getElementById('img-bogini2');
+        const l1 = document.getElementById('img-legioner1');
+        const l2 = document.getElementById('img-legioner2');
+
+        // Zawsze zatrzymaj pętle efektów przy sprawdzaniu
+        stopMusic();
+        stopContinuousFlowers();
+
+        if (proc === 100) {
+            streakPerfect++;
+            streakError = 0;
+            
+            // Ukrywamy legionistów
+            legPun.style.display = 'none';
+
+            // SCENARIUSZ SUKCESU
+            if (streakPerfect >= 3) {
+                // 3x Perfect: CESARZ
+                godRew.style.display = 'none';
+                uruchomCesarza();
+            } else {
+                // 1 lub 2 x Perfect: POKAŻ BOGINIE (FLEX)
+                godRew.style.display = 'flex'; 
+                b1.style.display = 'block'; // ZAWSZE pokazujemy pierwszą
+
+                if (streakPerfect === 2) {
+                    // DWIE BOGINIE: Intensywne nagrody
+                    b2.style.display = 'block'; // Dokładamy drugą
+                    startContinuousFlowers(); // Start gęstego, jaskrawego deszczu
+                    startMusic(); // Start muzyki (lira i syringa)
+                } else {
+                    // JEDNA BOGINI: Standardowa nagroda
+                    b2.style.display = 'none'; // Tylko jedna
+                    deszczKwiatow(); // Pojedynczy, zwykły deszcz
+                }
+            }
+        } else {
+            streakPerfect = 0; // Reset sukcesów
+            streakError++;     // Seria błędów
+            
+            godRew.style.display = 'none';
+            
+            // SCENARIUSZ PORAŻKI
+            legPun.style.display = 'block';
+            
+            if (streakError >= 2) {
+                l1.style.display = 'none';
+                l2.style.display = 'block'; // Wściekły
+            } else {
+                l1.style.display = 'block'; // Zwykły
+                l2.style.display = 'none';
+            }
+        }
+        
+        aktualizujLicznik();
+        wyswietlWynik(proc, pts, tot);
+        
+        document.getElementById('checkBtn').style.display = 'none';
+        const rep = document.getElementById('repeatBtn');
+        const cont = document.getElementById('continueBtn');
+        const rew = document.getElementById('special-reward');
+        rep.style.display = 'none'; cont.style.display = 'none'; rew.style.display = 'none';
+
+        if (bledneSlowka.length > 0) {
+            rep.style.display = 'inline-block';
+        } else {
+            if (streakPerfect >= 3) {
+                const s = getLosowyAforyzm();
+                document.getElementById('aforyzm-lat').textContent = s.lat;
+                document.getElementById('aforyzm-pl').textContent = s.pl;
+                rew.style.display = 'block';
+                wystrzalSalutow(); 
+            } else {
+                cont.style.display = 'inline-block';
+                cont.innerHTML = `Continuā (zostało: ${BAZA_SLOWEK.length - opanowaneSlowka.length})`;
+            }
+        }
+    }
+
+    function obslugaPowtorki() {
+        document.getElementById('result-area').style.display = 'none';
+        document.getElementById('checkBtn').style.display = 'inline-block';
+        document.getElementById('repeatBtn').style.display = 'none';
+        stopMusic();
+        stopContinuousFlowers();
+        generareExamen(bledneSlowka); bledneSlowka = []; 
+    }
+
+    function nastepnaRunda() {
+        document.getElementById('result-area').style.display = 'none';
+        document.getElementById('checkBtn').style.display = 'inline-block';
+        document.getElementById('repeatBtn').style.display = 'none';
+        document.getElementById('continueBtn').style.display = 'none';
+        document.getElementById('special-reward').style.display = 'none';
+        stopMusic();
+        stopContinuousFlowers();
+        generareExamen([]);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function zresetujLicznikIKontynuuj() {
+        streakPerfect = 0; aktualizujLicznik(); nastepnaRunda(); 
+    }
+
+    function wyswietlWynik(procent, punkty, total) {
+        const ra = document.getElementById('result-area');
+        const sd = document.getElementById('score-display');
+        const md = document.getElementById('latin-msg');
+        ra.style.display = 'block';
+        sd.innerHTML = `${punkty} / ${total} (${procent}%)`;
+        let msg = "", col = "";
+        if (procent === 100) { msg = "Perfectum!"; col = "var(--success)"; }
+        else if (procent >= 80) { msg = "Optimē!"; col = "#27ae60"; }
+        else if (procent >= 50) { msg = "Bene."; col = "#f39c12"; }
+        else { msg = "Male. Stude dīligentius!"; col = "var(--error)"; }
+        md.textContent = msg; md.style.color = col;
+        ra.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onload = function() { 
+        if (typeof BAZA_SLOWEK !== 'undefined') {
+            generareExamen(); 
+            aktualizujLicznik(); 
+        } else {
+            alert("Błąd: Nie znaleziono pliku voc-files/baza.js!");
+        }
+    };
+</script>
+
+</body>
+</html>
